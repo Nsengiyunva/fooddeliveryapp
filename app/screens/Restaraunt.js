@@ -10,6 +10,7 @@ const Restaraunt = ( { route, navigation } ) => {
 
     const[ restaurant, setRestaurant ] = useState( null )
     const [ currentLocation, setCurrentLocation ] = useState( null )
+    const[ orderItems, setOrderItems ] = useState([])
     
     useEffect( () => {
         let { item, currentLocation  } = route.params
@@ -18,7 +19,47 @@ const Restaraunt = ( { route, navigation } ) => {
     } )
 
     function editOrder( action, menuId, price ) {
-        
+        if( action === "+" ){
+            let orderList = orderItems.slice()
+            let item = orderList.filter( value => value.menuId == menuId )
+
+            if( item.length > 0 ) {
+                let newQty = item[ 0 ].qty + 1
+                item[ 0 ].qty = newQty 
+                item[ 0 ].total = item[ 0 ].qty * price
+            }
+            else {
+                const newItem = {
+                    menuId: menuId,
+                    qty: 1,
+                    price: price,
+                    total: price
+                }
+                orderList.push( newItem )
+            }
+            setOrderItems( orderList )
+        }
+        else {
+            if( item.length > 0 ) {
+                if( item[ 0 ]?.qty > 0 ) {
+                    let newQty = item[ 0 ].qty - 1
+                    item[ 0 ].qty = newQty 
+                    item[ 0 ].total = newQty * price
+                }
+            }
+
+            setOrderItems( orderList )
+        }
+    }
+
+    function getOrderQty( menuId  ){
+        let orderItem = orderItems.filter( a => {
+            return a.menuId == menuId
+        } )
+        if( orderItem.length > 0 ) {
+            return orderItem[ 0 ].qty
+        }
+        return 0
     }
 
     function renderHeader() {
@@ -122,7 +163,7 @@ const Restaraunt = ( { route, navigation } ) => {
                                                 alignItems: 'center',
                                                 justifyContent: 'center'
                                             }}>
-                                                <Text>5</Text>
+                                                <Text>{getOrderQty( item.menuid )}</Text>
                                             </View>
 
                                             <TouchableOpacity
@@ -134,6 +175,7 @@ const Restaraunt = ( { route, navigation } ) => {
                                                     borderTopRightRadius: 25,
                                                     borderBottomRightRadius: 25
                                                 }}
+                                                onPress={() => editOrder( "+", item.menuId, item.price  )}
                                             >
                                                 <Text>+</Text>
                                             </TouchableOpacity>
@@ -290,7 +332,11 @@ const Restaraunt = ( { route, navigation } ) => {
                             backgroundColor: COLORS.primary,
                             alignItems: 'center',
                             borderRadius: SIZES.radius
-                        }}>
+                        }}
+                        onPress={() => navigation.navigate( "OrderDelivery", {
+                            restaurant,
+                            currentLocation: currentLocation
+                        } )}>
                             <Text style={{ color: COLORS.white}}> Order </Text>
                         </TouchableOpacity>
                     </View>
@@ -310,6 +356,7 @@ const Restaraunt = ( { route, navigation } ) => {
         )
     }
 
+    console.log('testoing', restaurant)
     return (
         <SafeAreaView style={styles.container}>
             {renderHeader()}
